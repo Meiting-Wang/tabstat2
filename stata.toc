@@ -1,0 +1,7 @@
+v 1.0.0
+d Meiting Wang
+d Institute for Economic and Social Research, Jinan University
+d Guangzhou, China
+d wangmeiting92@gmail.com
+
+p tabstat - output the results of the tabstat command to Stata interface, Word and LaTeX
