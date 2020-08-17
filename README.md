@@ -1,4 +1,4 @@
-# Stata 新命令：tabstat2——"table"命令结果的输出
+# Stata 新命令：tabstat2——"tabstat"命令结果的输出
 
 > 作者：王美庭  
 > Email: wangmeiting92@gmail.com
@@ -13,11 +13,11 @@
 
 ## 一、引言
 
-在处理数据时，需要将`table`命令的结果导出，但始终无法找到对应的选项，于是便自己动手写了这个命令。不过这个命令是基于`tabstat`和`esttab`编写的，所以与原生的命令有些许不同，不过大同小异。
+写了好多类似的命令，突然发现这个分组描述性统计的`tabstat`还没写，同时它也有着其他已写命令不具有的特点（有兴趣的读者可以自己感受一下），于是索性就写了，好形成一个整体，就这样。
 
-本文介绍的`tabstat2`命令，可以将分区描述性统计结果输出至 Stata 界面、Word 的 .rtf 文件和 LaTeX 的.tex 文件。有人可能会说，不是已经有了`wmtsum`了吗？不是的，`wmtsum`不能处理分区的情况。
+`tabstat`在没有`by`选项时，可以输出和`sum`一样的效果，所以当`tabstat2`没有`by`选项时，可以输出和`wmtsum`一样的效果。当然，这就引出了之所以形成本文的原因——加上`by`选项，**`tabstat2`命令可以将分组描述性统计输出至Stata界面、Word文件及LaTeX文件中**（当然，该命令依然保留了可以不使用`by`选项去形成与`wmtsum`一样的结果的功能）。有人会说，前面不是有`table2`命令了吗？不是的，差异是肯定有的——毕竟分区块与分组还是有区别的。有兴趣的读者可以运行一下帮助文件中的实例感受一下。
 
-该命令，和已经推出`wmtsum`、`wmttest`、`wmtcorr`、`wmtreg`、`wmtmat`命令，都可以通过`append`选项成为一个整体，将输出结果集中输出至一个 Word 或 LaTeX 文件中。
+该命令，和已经推出的`wmtsum`、`wmttest`、`wmtcorr`、`wmtreg`、`wmtmat`、`table2`命令，都可以通过`append`选项成为一个整体，将输出结果集中输出至一个 Word 或 LaTeX 文件中。
 
 更多阅读：
 
@@ -26,25 +26,22 @@
 - [Stata 新命令：wmtcorr——相关系数矩阵的输出](https://mp.weixin.qq.com/s?__biz=MzI0MjgyNDc3MQ==&mid=2247483678&idx=1&sn=6cc79f9de0caff35e9ee2ae5b057e3e2&chksm=e9772232de00ab241b6463368580a1e8a858878e2df3a6f444dce04f554aeeded2dcc873b101&token=1668456026&lang=zh_CN#rd)
 - [Stata 新命令：wmtreg——回归结果的输出](https://mp.weixin.qq.com/s?__biz=MzI0MjgyNDc3MQ==&mid=2247483693&idx=1&sn=d70a570fd759ac93fe6bb476d807e9ef&chksm=e9772201de00ab17139e5362b17721ed85acf42de0191a7a1c89fc24f4c653e40f91be4a7c44&token=1668456026&lang=zh_CN#rd)
 - [Stata 新命令：wmtmat——矩阵的输出](https://mp.weixin.qq.com/s?__biz=MzI0MjgyNDc3MQ==&mid=2247483704&idx=1&sn=0423c8752e807e38f4bd5809d2231d9e&chksm=e9772214de00ab02546bf402a3ef05326615d0c687bd280d4a2d501b6c6d17e31c48e623056f#rd)
+- [Stata 新命令：table2——"table"命令结果的输出](https://mp.weixin.qq.com/s?__biz=MzI0MjgyNDc3MQ==&mid=2247483898&idx=1&sn=d3b46fff9d820225a69f800f6efa0d03&chksm=e97722d6de00abc0b17ea359a361ff8c56c4ad63a9b651e39eaf6b9c3dd89fb95af9eae11ef4&token=1033606962&lang=zh_CN#rd)
 
 ## 二、命令的安装
 
-`tabstat2`命令以及本人其他命令的代码都托管于 GitHub 上，读者可随时下载安装这些命令。
+`tabstat2`及本人其他命令的代码都托管于 GitHub 上，读者可随时下载安装这些命令。
 
-`tabstat2`由于用到了自己编写的`wmtstr`、`space_rm`、`mat_cagn`程序，所以有以下可选安装方式。
-
-（1）如果你没有`wmtstr`、`space_rm`、`mat_cagn`程序，则你需要使用`github`外部命令进行安装（`github`命令本身可以通过`net install github, from("https://haghish.github.io/github/")`进行安装）：
-
-```stata
-github install Meiting-Wang/tabstat2
-```
-
-> 以上语句会自动额外帮助你安装最新版的`wmtstr`、`space_rm`、`mat_cagn`程序。
-
-（2）如果你已经有了`wmtstr`、`space_rm`、`mat_cagn`程序，则你可以通过系统自带的`net`命令进行安装以节约安装时间：
+你可以通过系统自带的`net`命令进行安装：
 
 ```stata
 net install tabstat2, from("https://raw.githubusercontent.com/Meiting-Wang/tabstat2/master")
+```
+
+也可以通过`github`外部命令进行安装（`github`命令本身可以通过`net install github, from("https://haghish.github.io/github/")`进行安装）：
+
+```stata
+github install Meiting-Wang/tabstat2
 ```
 
 ## 三、语法与选项
