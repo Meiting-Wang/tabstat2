@@ -38,7 +38,7 @@ where the subcommands can be :
 {marker Description}{title:Description}
 
 {p 4 4 2}
-{bf:tabstat2}, based on {help tabstat} and {help esttab}, can output the results of the {help tabstat} command to Stata interface, Word and LaTeX, but this command is slightly different from {help table}, and you can explore it by yourself. It is worth noting that this command can only be used in version 16 or later.
+{bf:tabstat2}, based on {help tabstat} and {help esttab}, can output the results of the {help tabstat} command to Stata interface, Word and LaTeX, but this command is slightly different from {help tabstat}, and you can explore it by yourself. It is worth noting that this command can only be used in version 16 or later.
 
 {p 4 4 2}
 You can also append the output result from {bf:tabstat2} to a existed word or LaTeX document,
