@@ -15,9 +15,11 @@
 
 写了好多类似的命令，突然发现这个分组描述性统计的`tabstat`还没写，同时它也有着其他已写命令不具有的特点（有兴趣的读者可以自己感受一下），于是索性就写了，好形成一个整体，就这样。
 
-`tabstat`在没有`by`选项时，可以输出和`sum`一样的效果，所以当`tabstat2`没有`by`选项时，可以输出和`wmtsum`一样的效果。当然，这就引出了之所以形成本文的原因——加上`by`选项，**`tabstat2`命令可以将分组描述性统计输出至Stata界面、Word文件及LaTeX文件中**（当然，该命令依然保留了可以不使用`by`选项去形成与`wmtsum`一样的结果的功能）。有人会说，前面不是有`table2`命令了吗？不是的，差异是肯定有的——毕竟分区块与分组还是有区别的。有兴趣的读者可以运行一下帮助文件中的实例感受一下。
+`tabstat`在没有`by`选项时，可以输出和`sum`一样的效果，所以当`tabstat2`没有`by`选项时，可以输出和`wmtsum`一样的效果。当然，这就引出了之所以形成本文的原因——加上`by`选项，**`tabstat2`命令可以将分组描述性统计输出至 Stata 界面、Word 文件及 LaTeX 文件中**（当然，该命令依然保留了可以不使用`by`选项去形成与`wmtsum`一样的结果的功能）。有人会说，前面不是有`table2`命令了吗？不是的，差异是肯定有的——毕竟分区块与分组还是有区别的。有兴趣的读者可以运行一下帮助文件中的实例感受一下。
 
 该命令，和已经推出的`wmtsum`、`wmttest`、`wmtcorr`、`wmtreg`、`wmtmat`、`table2`命令，都可以通过`append`选项成为一个整体，将输出结果集中输出至一个 Word 或 LaTeX 文件中。
+
+> 以上可以通过`append`选项形成一个整体的系列命令，在导出 LaTeX 表格时，统一采用的是三线表形式（booktabs）。
 
 更多阅读：
 
@@ -52,18 +54,17 @@ github install Meiting-Wang/tabstat2
 tabstat2 varlist [if] [in] [weight] [using filename] [, options]
 ```
 
-> - `varlist`: 可输入一个或两个类别变量
-> - `weight`: 可以选择 fweight 或 aweight，默认为空。
+> - `varlist`: 可输入一个或多个数值型变量
+> - `weight`: 可以选择 aweight 或 fweight，默认为空。
 > - `using`: 可以将结果输出至 Word（ .rtf 文件）和 LaTeX（ .tex 文件）
 
 **选项（options）**：
 
 - 一般选项
-  - `contents(string)`：填写类似`n mean(price) sd(price) mean(mpg)`的语句，括号内为变量，括号外为统计量。所有可以输入的统计量有：`n mean sd min max range variance sum p1 p5 p10 p25 p50 p75 p90 p95 p99 cv skewness kurtosis`。这些统计量的含义可以在`help tabstat`中查看。
-  - `format(fmtlist)`：设定`contents`中对应统计量的数值格式
-  - `row`：额外报告行总计
-  - `column`：额外报告列总计
+  - `by(varname)`: 可输入一个类别变量
+  - `statistics(string)`：设定要报告的统计量，所以可以输入的统计量有：`count mean sd min max range variance sum p1 p5 p10 p25 p50 p75 p90 p95 p99 iqr cv semean skewness kurtosis`。当然，我们还可以设置统计量的数值格式和标签，如`mean(fmt(%9.3f) label(mean_label))`。
   - `listwise`：在计算统计量之前会先剔除所涉及变量中包含缺漏值的观测值
+  - `nototal`：不报告总计部分
   - `title(string)`：设置表格标题
   - `replace`: 替换已存在的文件
   - `append`: 将输出内容附加在已存在的文件中
@@ -83,149 +84,120 @@ tabstat2 varlist [if] [in] [weight] [using filename] [, options]
 ## 四、实例
 
 ```stata
-*共同部分
 sysuse auto.dta, clear
-tabstat2 foreign, c(n) //分组计数
-tabstat2 foreign, c(n mean(price) sd(price) mean(trunk) sd(trunk)) //分组计算统计量
-tabstat2 foreign, c(n mean(price) sd(price) mean(trunk) sd(trunk)) row //额外报告行方向总体上计算的统计量
-tabstat2 foreign, c(n mean(price) sd(price) mean(trunk) sd(trunk)) row list //计算统计量时不会考虑包含缺漏值的观测值
+*--共同部分
+tabstat2 price weight mpg rep78 //默认报告count mean sd min max
+tabstat2 price weight mpg rep78, listwise //在计算统计量时会先提出所涉及变量包含缺漏值的观测值
+tabstat2 price weight mpg rep78, s(count mean min max) //设定特定的统计量
+tabstat2 price weight mpg rep78, s(count(label(n)) mean(fmt(2)) min(fmt(2)) max(fmt(2))) //为统计量设置标签以及数值格式
 
-tabstat2 foreign rep78, c(n) //分组计数
-tabstat2 foreign rep78, c(n mean(price) sd(price) mean(trunk) sd(trunk)) //分组计算统计量
-tabstat2 foreign rep78, c(n mean(price) sd(price) mean(trunk) sd(trunk)) row //额外报告行方向总体上计算的统计量
-tabstat2 foreign rep78, c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col //额外报告列方向总体上计算的统计量
-tabstat2 foreign rep78, c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col list //计算统计量时不会考虑包含缺漏值的观测值
+tabstat2 price weight mpg rep78, by(foreign) //分组报告描述性统计
+tabstat2 price weight mpg rep78, by(foreign) nototal //不报告Total部分
+tabstat2 price weight mpg rep78, by(foreign) eql(domestic foreign Total) //设置行方程名
+tabstat2 price weight mpg rep78, by(foreign) varl(price price_plus mpg mpg_plus) //为变量设置标签
+tabstat2 price weight mpg rep78, by(foreign) coll(col1 col2 col3 col4 col5) //为表格自定义列名
+tabstat2 price weight mpg rep78, by(foreign) compress //压缩表格横向空格以使得表格更紧凑
+tabstat2 price weight mpg rep78, by(foreign) compress varw(20) //自定义表格第一列的宽度
+tabstat2 price weight mpg rep78, by(foreign) compress modelw(12) //自定义表格第二列及之后列的宽度
+tabstat2 price weight mpg rep78, by(foreign) ti(This is a title) //设置表格标题
 
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col //设置数值格式
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col eql(domestic foreign Total) //自定义报告的行方程名
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col varl(mean(price) price_m sd(price) price_sd mean(trunk) trunk_m sd(trunk) trunk_sd) //自定义行名
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col coll("very bad" bad general good "very good" Total) //自定义列名
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col compress //将表格压缩展示
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col varw(11) //自定义第一列的宽度(空格数)
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col compress varw(12) modelw(10) //将第二列及之后列的宽度设定为10个空格
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col compress varw(12) modelw(10 15 20 20 20 20) //为第二列及之后列分别自定义宽度
-tabstat2 foreign rep78 , c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col ti(This is a title) //自定义表格标题
+*--Word部分
+tabstat2 price weight mpg rep78 using Myfile.rtf, replace by(foreign) //将结果导出至Word
 
-*Word部分
-tabstat2 foreign rep78 using Myfile.rtf, replace c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col ti(This is a title)  //将结果输出至Word
+*--LaTeX部分
+tabstat2 price weight mpg rep78 using Myfile.tex, replace by(foreign) ti(This is a title) //将结果导出至LaTeX
+tabstat2 price weight mpg rep78 using Myfile.tex, replace by(foreign) ti(This is a title) a(dot) //设置LaTeX表格列为小数点对齐(默认为数学模式居中对齐)
+tabstat2 price weight mpg rep78 using Myfile.tex, replace by(foreign) ti(This is a title) page(amsmath) //为LaTeX添加额外的宏包
+tabstat2 price weight mpg rep78 using Myfile.tex, replace by(foreign) ti(This is a title) width(\textwidth) //将LaTeX的表格宽度设为版心宽度
 
-*LaTeX部分
-tabstat2 foreign rep78 using Myfile.tex, replace c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col ti(This is a title) //将结果输出至LaTeX
-tabstat2 foreign rep78 using Myfile.tex, replace c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col ti(This is a title) a(math) //设置列格式为数学格式(也为默认列格式)
-tabstat2 foreign rep78 using Myfile.tex, replace c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col ti(This is a title) a(dot) //设置列格式为小数点对齐
-tabstat2 foreign rep78 using Myfile.tex, replace c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col ti(This is a title) page(amsmath) //引入额外的宏包(无论怎么样都会引入array和booktabs宏包)
-tabstat2 foreign rep78 using Myfile.tex, replace c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col ti(This is a title) width(\textwidth) //设置表格宽度为版心宽度
 
-*该命令结果可以用系统自带的 table 命令进行验证
-table foreign, c(freq)
-table foreign, c(freq mean price sd price mean trunk sd trunk)
-table foreign, c(freq mean price sd price mean trunk sd trunk) row
-
-table foreign rep78, c(freq)
-table foreign rep78, c(freq mean price sd price mean trunk sd trunk)
-table foreign rep78, c(freq mean price sd price mean trunk sd trunk) row
-table foreign rep78, c(freq mean price sd price mean trunk sd trunk) row col
+*-该命令结果可以用系统自带的tabstat命令进行验证
+tabstat price weight mpg rep78, c(s) s(count mean sd min max)
+tabstat price weight mpg rep78, by(foreign) c(s) s(count mean sd min max) long
 ```
 
 > 以上所有与`tabstat2`相关的实例都可以在`help tabstat2`中直接运行。  
-> ![image](https://user-images.githubusercontent.com/42256486/90336243-03baec80-e00d-11ea-8d9a-d36b5a507916.png)
+> ![](https://img-blog.csdnimg.cn/20200818102100924.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmdtZWl0aW5nYWE=,size_16,color_FFFFFF,t_70#pic_center)
 
 ## 五、输出效果展示
 
 - **Stata**
 
 ```stata
-tabstat2 foreign, c(n mean(price) sd(price) mean(trunk) sd(trunk)) row
+tabstat2 price weight mpg rep78, compress
 ```
 
 ```stata
------------------------------------------------------------------------------
-                        n  mean(price)    sd(price)  mean(trunk)    sd(trunk)
------------------------------------------------------------------------------
-0                      52     6072.423     3097.104        14.75     4.306288
-1                      22     6384.682     2621.915     11.40909     3.216906
-Total                  74     6165.257     2949.496     13.75676     4.277404
------------------------------------------------------------------------------
+------------------------------------------------------------
+               count      mean        sd       min       max
+------------------------------------------------------------
+price             74  6165.257  2949.496      3291     15906
+weight            74  3019.459  777.1936      1760      4840
+mpg               74   21.2973  5.785503        12        41
+rep78             69  3.405797  .9899323         1         5
+------------------------------------------------------------
 ```
 
 ```stata
-tabstat2 foreign rep78, c(n mean(price) sd(price) mean(trunk) sd(trunk)) row col
+tabstat2 price weight mpg rep78, compress s(count(label(n)) mean(fmt(2)) min(fmt(2)) max(fmt(2)))
 ```
 
 ```stata
-------------------------------------------------------------------------------------------
-                        1            2            3            4            5        Total
-------------------------------------------------------------------------------------------
-0                                                                                         
-n                       2            8           27            9            2           48
-mean(price)        4564.5     5967.625     6607.074     5881.556       4204.5      6179.25
-sd(price)        522.5519     3579.357     3661.267     1592.019     311.8341     3188.969
-mean(trunk)           8.5       14.625     15.59259     16.66667          9.5     15.08333
-sd(trunk)         2.12132     4.983903     3.532914      4.66369      2.12132     4.281744
-------------------------------------------------------------------------------------------
-1                                                                                         
-n                       0            0            3            9            9           21
-mean(price)             .            .     4828.667     6261.444     6292.667     6070.143
-sd(price)               .            .     1285.613     1896.092     2765.629     2220.984
-mean(trunk)             .            .     12.33333     10.33333     11.88889     11.28571
-sd(trunk)               .            .      3.21455     3.840573     2.666667     3.242574
-------------------------------------------------------------------------------------------
-Total                                                                                     
-n                       2            8           30           18           11           69
-mean(price)        4564.5     5967.625     6429.233       6071.5         5913     6146.043
-sd(price)        522.5519     3579.357      3525.14     1709.608     2615.763      2912.44
-mean(trunk)           8.5       14.625     15.26667         13.5     11.45455     13.92754
-sd(trunk)         2.12132     4.983903     3.590537     5.272013      2.65946     4.343077
-------------------------------------------------------------------------------------------
+--------------------------------------------------
+                   n      mean       min       max
+--------------------------------------------------
+price             74   6165.26   3291.00  15906.00
+weight            74   3019.46   1760.00   4840.00
+mpg               74     21.30     12.00     41.00
+rep78             69      3.41      1.00      5.00
+--------------------------------------------------
 ```
 
 - **Word**
 
 ```stata
-tabstat2 foreign rep78 using Myfile.rtf, replace c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col ti(This is a title)
+tabstat2 price weight mpg rep78 using Myfile.rtf, replace compress by(foreign) ti(This is a title)
 ```
 
-![tabstat2-Word](https://user-images.githubusercontent.com/42256486/90336348-d6bb0980-e00d-11ea-8801-a89428a10bb1.png)
+![tabstat2-Word](https://img-blog.csdnimg.cn/20200818102614125.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmdtZWl0aW5nYWE=,size_16,color_FFFFFF,t_70#pic_center)
 
 - **LaTeX**
 
 ```stata
-tabstat2 foreign rep78 using Myfile.tex, replace c(n mean(price) sd(price) mean(trunk) sd(trunk)) f(0 2 2 2 2) row col ti(This is a title) a(math)
+tabstat2 price weight mpg rep78 using Myfile.tex, replace by(foreign) compress ti(This is a title) a(math)
 ```
 
-```stata
-% 16 Aug 2020 22:17:09
+```tex
+% 18 Aug 2020 10:27:33
 \documentclass{article}
 \usepackage{array}
 \usepackage{booktabs}
 \begin{document}
 
 \begin{table}[htbp]\centering
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
 \caption{This is a title}
-\begin{tabular}{l*{6}{>{$}c<{$}}}
+\begin{tabular}{l*{1}{*{5}{>{$}c<{$}}}}
 \toprule
-            &\multicolumn{1}{c}{1}&\multicolumn{1}{c}{2}&\multicolumn{1}{c}{3}&\multicolumn{1}{c}{4}&\multicolumn{1}{c}{5}&\multicolumn{1}{c}{Total}\\
+          &\multicolumn{1}{c}{count}&\multicolumn{1}{c}{mean}&\multicolumn{1}{c}{sd}&\multicolumn{1}{c}{min}&\multicolumn{1}{c}{max}\\
 \midrule
-0           &            &            &            &            &            &            \\
-n           &           2&           8&          27&           9&           2&          48\\
-mean(price) &     4564.50&     5967.63&     6607.07&     5881.56&     4204.50&     6179.25\\
-sd(price)   &      522.55&     3579.36&     3661.27&     1592.02&      311.83&     3188.97\\
-mean(trunk) &        8.50&       14.63&       15.59&       16.67&        9.50&       15.08\\
-sd(trunk)   &        2.12&        4.98&        3.53&        4.66&        2.12&        4.28\\
+0         &         &         &         &         &         \\
+price     &       52& 6072.423& 3097.104&     3291&    15906\\
+weight    &       52& 3317.115& 695.3637&     1800&     4840\\
+mpg       &       52& 19.82692& 4.743297&       12&       34\\
+rep78     &       48& 3.020833&  .837666&        1&        5\\
 \midrule
-1           &            &            &            &            &            &            \\
-n           &           0&           0&           3&           9&           9&          21\\
-mean(price) &           .&           .&     4828.67&     6261.44&     6292.67&     6070.14\\
-sd(price)   &           .&           .&     1285.61&     1896.09&     2765.63&     2220.98\\
-mean(trunk) &           .&           .&       12.33&       10.33&       11.89&       11.29\\
-sd(trunk)   &           .&           .&        3.21&        3.84&        2.67&        3.24\\
+1         &         &         &         &         &         \\
+price     &       22& 6384.682& 2621.915&     3748&    12990\\
+weight    &       22& 2315.909& 433.0035&     1760&     3420\\
+mpg       &       22& 24.77273& 6.611187&       14&       41\\
+rep78     &       21& 4.285714& .7171372&        3&        5\\
 \midrule
-Total       &            &            &            &            &            &            \\
-n           &           2&           8&          30&          18&          11&          69\\
-mean(price) &     4564.50&     5967.63&     6429.23&     6071.50&     5913.00&     6146.04\\
-sd(price)   &      522.55&     3579.36&     3525.14&     1709.61&     2615.76&     2912.44\\
-mean(trunk) &        8.50&       14.63&       15.27&       13.50&       11.45&       13.93\\
-sd(trunk)   &        2.12&        4.98&        3.59&        5.27&        2.66&        4.34\\
+Total     &         &         &         &         &         \\
+price     &       74& 6165.257& 2949.496&     3291&    15906\\
+weight    &       74& 3019.459& 777.1936&     1760&     4840\\
+mpg       &       74&  21.2973& 5.785503&       12&       41\\
+rep78     &       69& 3.405797& .9899323&        1&        5\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -233,6 +205,6 @@ sd(trunk)   &        2.12&        4.98&        3.59&        5.27&        2.66&  
 \end{document}
 ```
 
-![tabstat2-LaTeX](https://user-images.githubusercontent.com/42256486/90336461-a1fb8200-e00e-11ea-8cf5-498467892d81.png)
+![tabstat2-LaTeX](https://img-blog.csdnimg.cn/2020081810294579.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dhbmdtZWl0aW5nYWE=,size_16,color_FFFFFF,t_70#pic_center)
 
 > 在将结果输出至 Word 或 LaTeX 时，Stata 界面上也会呈现对应的结果，以方便查看。
