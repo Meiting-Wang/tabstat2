@@ -1,6 +1,6 @@
 # Stata 新命令：tabstat2——"tabstat"命令结果的输出
 
-> 作者：王美庭1  
+> 作者：王美庭  
 > Email: wangmeiting92@gmail.com
 
 ## 目录
